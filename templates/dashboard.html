@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Vault{% endblock %}
+
+{% block extra_styles %}
+  body {
+    display: flex;
+    overflow: hidden;
+  }
+
+  .sidebar {
+    width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 20px;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 10;
+  }
+
+  .sidebar-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+    padding: 0 8px;
+    margin-bottom: 36px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .nav-item:hover, .nav-item.active {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .nav-section {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--muted);
+    padding: 0 12px;
+    margin: 20px 0 8px;
+    opacity: 0.6;
+  }
+
+  .sidebar-bottom {
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+
+  .user-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    color: #0c0c0f;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .user-info { flex: 1; overflow: hidden; }
+  .user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 11px; color: var(--muted); }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    margin-top: 4px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .logout-btn:hover { background: rgba(224,92,92,0.1); color: #e05c5c; }
+
+  .main {
+    margin-left: 240px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .topbar {
+    padding: 20px 36px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+
+  .topbar-title { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; }
+  .topbar-date  { font-size: 13px; color: var(--muted); }
+
+  .content {
+    padding: 40px 36px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .empty-state { text-align: center; animation: fadeUp 0.6s ease both; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .empty-icon  { font-size: 56px; margin-bottom: 20px; opacity: 0.4; }
+
+  .empty-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    font-weight: 400;
+    margin-bottom: 10px;
+  }
+
+  .empty-text {
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 340px;
+    line-height: 1.6;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(232,197,71,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(232,197,71,0.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 20px;
+  }
+{% endblock %}
+
+{% block content %}
+<script>
+  // Block back button while logged in
+  history.pushState(null, null, location.href);
+  window.onpopstate = function() {
+    history.pushState(null, null, location.href);
+  };
+
+  // Force reload if page is restored from bfcache (back button after logout)
+  window.addEventListener("pageshow", function(event) {
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+      window.location.replace("/dashboard");
+    }
+  });
+</script>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">⬡ Vault</div>
+
+  <div class="nav-section">Main</div>
+  <a class="nav-item active" href="#"><span class="icon">⊞</span> Dashboard</a>
+  <a class="nav-item" href="#"><span class="icon">◈</span> Analytics</a>
+  <a class="nav-item" href="#"><span class="icon">◉</span> Projects</a>
+
+  <div class="nav-section">Manage</div>
+  <a class="nav-item" href="#"><span class="icon">◷</span> Activity</a>
+  <a class="nav-item" href="#"><span class="icon">⬡</span> Settings</a>
+  <a class="nav-item" href="#"><span class="icon">◎</span> Team</a>
+
+  <div class="sidebar-bottom">
+    <div class="user-pill">
+      <div class="avatar">{{ initial }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ fullname }}</div>
+        <div class="user-role">Member</div>
+      </div>
+    </div>
+    <a class="logout-btn" href="/logout"><span>⏻</span> Sign out</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">Dashboard</span>
+    <span class="topbar-date">{{ date }}</span>
+  </div>
+  <div class="content">
+    <div class="empty-state">
+      <div class="empty-icon">✦</div>
+      <div class="empty-title">Your space is ready</div>
+      <p class="empty-text">
+        Welcome, <strong>{{ fullname }}</strong>. This dashboard is empty for now —
+        start building something great here.
+      </p>
+      <span class="badge">✓ Authenticated</span>
+    </div>
+  </div>
+</div>
+{% endblock %}

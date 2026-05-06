@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Vault{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0c0f;
+      --surface: #16161a;
+      --surface2: #1e1e24;
+      --border: #2a2a35;
+      --accent: #e8c547;
+      --accent2: #c9a227;
+      --text: #f0ede8;
+      --muted: #8a8796;
+      --danger: #e05c5c;
+      --success: #5ce08a;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 20%, rgba(232,197,71,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 60% at 80% 80%, rgba(100,80,200,0.07) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .flash {
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    .flash.error   { background: rgba(224,92,92,0.12); border: 1px solid rgba(224,92,92,0.3); color: var(--danger); }
+    .flash.success { background: rgba(92,224,138,0.10); border: 1px solid rgba(92,224,138,0.3); color: var(--success); }
+
+    {% block extra_styles %}{% endblock %}
+  </style>
+</head>
+<body>
+  {% block content %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive Records</title>
+    <style>
+        body { background: #d9f2ff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .container { background: white; border-radius: 20px; padding: 30px; max-width: 900px; margin: auto; }
+        .search-bar { width: 100%; padding: 12px; margin-bottom: 20px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f1f1f1; }
+        .red-text { color: #d32f2f; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <img src="{{ url_for('static', filename='logo.png') }}" style="height: 45px;">
+            <a href="/dashboard" style="background:#000; color:#fff; padding:10px 20px; text-decoration:none; border-radius:10px;">← Dashboard</a>
+        </header>
+
+        <h2>Violation Records</h2>
+        <input type="text" id="searchInput" class="search-bar" placeholder="Search Company or Terminal..." onkeyup="filterTable()">
+
+        <table id="recordsTable">
+            <thead>
+                <tr><th>TYPE</th><th>COMPANY</th><th>PASSENGER</th><th>LOCATION</th><th>TIMESTAMP</th></tr>
+            </thead>
+            <tbody>
+                {% for v in violators %}
+                <tr>
+                    <td>{{ v.type }}</td>
+                    <td>{{ v.company }}</td>
+                    <td class="red-text">{{ v.passenger }}</td>
+                    <td>{{ v.loc_name }}</td>
+                    <td>3/25/2026 - {{ v.time }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function filterTable() {
+            const input = document.getElementById("searchInput").value.toUpperCase();
+            const rows = document.getElementById("recordsTable").getElementsByTagName("tr");
+            for (let i = 1; i < rows.length; i++) {
+                const text = rows[i].textContent || rows[i].innerText;
+                rows[i].style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
+            }
+        }
+    </script>
+</body>
+</html>

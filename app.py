@@ -1,124 +1,76 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-import hashlib
-import os
-import json
-from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = "maxseat_secure_key"
 
-USERS_FILE = "users.json"
+def get_puv_data():
+    # Accurate CDO Locations (Agora and Bulua Terminals)
+    return [
+        {
+            "id": 1, "type": "🚌", "company": "Señor Pedro Lines", "plate": "KVR-102", 
+            "driver": "Juan Dela Cruz", "passenger": "14/22", "loc_name": "Bulua Westbound", 
+            "lat": 8.5018, "lng": 124.6115, "time": "13:04"
+        },
+        {
+            "id": 2, "type": "🚌", "company": "Oro Transit", "plate": "AAB-5501", 
+            "driver": "Ricardo Dalisay", "passenger": "23/22", "loc_name": "Agora Eastbound", 
+            "lat": 8.4928, "lng": 124.6572, "time": "13:04"
+        },
+        {
+            "id": 3, "type": "🚌", "company": "MisOr Express", "plate": "GA-9921", 
+            "driver": "Emilio Aguinaldo", "passenger": "18/22", "loc_name": "Bulua Westbound", 
+            "lat": 8.5012, "lng": 124.6120, "time": "13:04"
+        },
+        {
+            "id": 4, "type": "🚌", "company": "CDEO Movers", "plate": "KLY-442", 
+            "driver": "Ferdinand Mag", "passenger": "15/22", "loc_name": "Bulua Westbound", 
+            "lat": 8.5025, "lng": 124.6105, "time": "13:04"
+        },
+        {
+            "id": 5, "type": "🚌", "company": "Bukidnon Trans", "plate": "XYZ-8821", 
+            "driver": "Manny P.", "passenger": "22/22", "loc_name": "Agora Eastbound", 
+            "lat": 8.4935, "lng": 124.6580, "time": "13:04"
+        },
+        {
+            "id": 6, "type": "🚌", "company": "Bukidnon Express", "plate": "ABC-1234", 
+            "driver": "Jose Rizal", "passenger": "26/22", "loc_name": "Agora Eastbound", 
+            "lat": 8.4915, "lng": 124.6565, "time": "13:04"
+        }
+    ]
 
-@app.after_request
-def add_no_cache(response):
-    if "username" in session:
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "0"
-    return response
-
-def load_users():
-    if os.path.exists(USERS_FILE):
-        with open(USERS_FILE, "r") as f:
-            return json.load(f)
-    return {}
-
-def save_users(users):
-    with open(USERS_FILE, "w") as f:
-        json.dump(users, f, indent=2)
-
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
-
-@app.route("/")
+@app.route('/')
 def index():
-    if "username" in session:
-        return redirect(url_for("dashboard"))
-    return redirect(url_for("login"))
+    if 'logged_in' in session: return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
 
-
-@app.route("/login", methods=["GET", "POST"])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    if "username" in session:
-        return redirect(url_for("dashboard"))
+    if request.method == 'POST':
+        if request.form.get('username') == "admin" and request.form.get('password') == "1234":
+            session['logged_in'] = True
+            return redirect(url_for('dashboard'))
+        flash("Invalid Credentials")
+    return render_template('login.html')
 
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
-
-        users = load_users()
-        if username in users and users[username]["password"] == hash_password(password):
-            session["username"] = username
-            session["fullname"] = users[username]["fullname"]
-            flash("Welcome back!", "success")
-            return redirect(url_for("dashboard"))
-        else:
-            flash("Invalid username or password.", "error")
-
-    return render_template("login.html")
-
-
-@app.route("/signup", methods=["GET", "POST"])
-def signup():
-    if "username" in session:
-        return redirect(url_for("dashboard"))
-
-    if request.method == "POST":
-        fullname         = request.form.get("fullname", "").strip()
-        username         = request.form.get("username", "").strip()
-        email            = request.form.get("email", "").strip()
-        password         = request.form.get("password", "")
-        confirm_password = request.form.get("confirm_password", "")
-
-        if not all([fullname, username, email, password]):
-            flash("All fields are required.", "error")
-        elif len(password) < 8:
-            flash("Password must be at least 8 characters.", "error")
-        elif password != confirm_password:
-            flash("Passwords do not match.", "error")
-        else:
-            users = load_users()
-            if username in users:
-                flash("Username already taken. Choose another.", "error")
-            else:
-                users[username] = {
-                    "fullname": fullname,
-                    "email": email,
-                    "password": hash_password(password),
-                    "created_at": datetime.now().isoformat()
-                }
-                save_users(users)
-                flash("Account created! Please sign in.", "success")
-                return redirect(url_for("login"))
-
-    return render_template("signup.html")
-
-
-@app.route("/dashboard")
+@app.route('/dashboard')
 def dashboard():
-    if "username" not in session:
-        flash("Please log in to continue.", "error")
-        return redirect(url_for("login"))
+    if not session.get('logged_in'): return redirect(url_for('login'))
+    puvs = get_puv_data()
+    for p in puvs:
+        curr, limit = map(int, p['passenger'].split('/'))
+        p['is_violator'] = curr >= limit
+    return render_template('dashboard.html', puvs=puvs)
 
-    fullname = session.get("fullname", session["username"])
-    initial  = fullname[0].upper()
-    date     = datetime.now().strftime("%A, %B %d, %Y")
+@app.route('/records')
+def records():
+    if not session.get('logged_in'): return redirect(url_for('login'))
+    violators = [p for p in get_puv_data() if int(p['passenger'].split('/')[0]) >= int(p['passenger'].split('/')[1])]
+    return render_template('records.html', violators=violators)
 
-    return render_template("dashboard.html", fullname=fullname, initial=initial, date=date)
-
-
-@app.route("/logout")
+@app.route('/logout')
 def logout():
     session.clear()
-    flash("You've been signed out.", "success")
-    response = redirect(url_for("login"))
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    return response
+    return redirect(url_for('login'))
 
-
-if __name__ == "__main__":
-    print("\n  ⬡  Vault is running → http://127.0.0.1:5000\n")
+if __name__ == '__main__':
     app.run(debug=True)

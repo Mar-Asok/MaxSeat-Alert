@@ -1,52 +1,67 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Interactive Records</title>
+    <title>Records - MaxSeat Alert</title>
+    <script>
+        (function() {
+            if (localStorage.getItem('sidebarActive') === 'true') {
+                document.documentElement.classList.add('sidebar-active', 'no-transition');
+            }
+        })();
+    </script>
     <style>
-        body { background: #d9f2ff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .container { background: white; border-radius: 20px; padding: 30px; max-width: 900px; margin: auto; }
-        .search-bar { width: 100%; padding: 12px; margin-bottom: 20px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; }
+        :root { --sidebar-width: 280px; --bg-blue: #d9f2ff; }
+        body { background: var(--bg-blue); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; }
+        
+        .sidebar { position: fixed; top: 0; left: calc(-1 * var(--sidebar-width)); width: var(--sidebar-width); height: 100%; background: #eaf8ff; z-index: 2100; transition: transform 0.3s ease; padding: 40px 20px; box-sizing: border-box; border-right: 1px solid #bde0f5; }
+        .sidebar-active .sidebar { transform: translateX(var(--sidebar-width)); }
+        .no-transition .sidebar { transition: none !important; }
+
+        .nav-link { text-decoration: none; color: #3d4c5a; font-weight: 600; padding: 14px 20px; border-radius: 12px; display: block; margin-bottom: 5px; }
+        .nav-link.active { background: #000; color: #fff; }
+
+        .hamburger { position: fixed; top: 20px; left: 20px; z-index: 2201; cursor: pointer; background: white; width: 44px; height: 44px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .hamburger div { width: 20px; height: 2px; background: black; }
+
+        .main { padding: 80px 40px; max-width: 1100px; margin: auto; }
+        .section { background: white; border-radius: 24px; padding: 30px; margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        h2 { border-left: 6px solid #ff3b30; padding-left: 15px; color: #3d4c5a; margin-top: 0; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f1f1f1; }
-        .red-text { color: #d32f2f; font-weight: bold; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .red { color: #ff3b30; font-weight: bold; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <img src="{{ url_for('static', filename='logo.png') }}" style="height: 45px;">
-            <a href="/dashboard" style="background:#000; color:#fff; padding:10px 20px; text-decoration:none; border-radius:10px;">← Dashboard</a>
-        </header>
+<body onload="setTimeout(()=>document.documentElement.classList.remove('no-transition'), 100)">
 
-        <h2>Violation Records</h2>
-        <input type="text" id="searchInput" class="search-bar" placeholder="Search Company or Terminal..." onkeyup="filterTable()">
+    <div class="hamburger" onclick="toggleSidebar()">
+        <div></div><div></div><div></div>
+    </div>
 
-        <table id="recordsTable">
-            <thead>
-                <tr><th>TYPE</th><th>COMPANY</th><th>PASSENGER</th><th>LOCATION</th><th>TIMESTAMP</th></tr>
-            </thead>
-            <tbody>
-                {% for v in violators %}
-                <tr>
-                    <td>{{ v.type }}</td>
-                    <td>{{ v.company }}</td>
-                    <td class="red-text">{{ v.passenger }}</td>
-                    <td>{{ v.loc_name }}</td>
-                    <td>3/25/2026 - {{ v.time }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="sidebar">
+        <img src="{{ url_for('static', filename='logo.png') }}" style="width: 100%; margin-bottom: 50px;">
+        <a href="/dashboard" class="nav-link">Dashboard</a>
+        <a href="/records" class="nav-link active">View Records</a>
+        <a href="/logout" class="nav-link" style="margin-top: 40px; border: 1px solid #c5e1f5; text-align: center;">Sign Out</a>
+    </div>
+
+    <div class="main">
+        <div class="section">
+            <h2>Active Violations (Highway Only)</h2>
+            <table>
+                <thead><tr><th>Vehicle</th><th>Passenger Load</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for v in active %}
+                    <tr><td><b>{{ v.company }}</b></td><td class="red">{{ v.passenger }}</td><td class="red">⚠️ Overload</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
-        function filterTable() {
-            const input = document.getElementById("searchInput").value.toUpperCase();
-            const rows = document.getElementById("recordsTable").getElementsByTagName("tr");
-            for (let i = 1; i < rows.length; i++) {
-                const text = rows[i].textContent || rows[i].innerText;
-                rows[i].style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
-            }
+        function toggleSidebar() {
+            const active = document.documentElement.classList.toggle('sidebar-active');
+            localStorage.setItem('sidebarActive', active);
         }
     </script>
 </body>

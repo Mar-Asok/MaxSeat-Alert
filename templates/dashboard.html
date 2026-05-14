@@ -1,91 +1,57 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>MaxSeat Live Dashboard</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        body { background: #cfefff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
-        .container { background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; max-width: 1200px; margin: auto; animation: slideUp 0.6s ease-out; }
-        #map { height: 400px; border-radius: 15px; margin-bottom: 30px; border: 4px solid white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
-        th { text-align: left; padding: 10px 15px; color: #546e7a; font-size: 13px; text-transform: uppercase; }
-        td { background: white; padding: 15px; transition: 0.3s; }
-        tr:hover td { background: #f1f8ff; transform: scale(1.01); }
-        td:first-child { border-radius: 12px 0 0 12px; }
-        td:last-child { border-radius: 0 12px 12px 0; }
-        .violator td { color: #d32f2f; font-weight: bold; }
-        .badge { background: #eee; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-family: monospace; }
-        .locate-btn { background: black; color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <img src="{{ url_for('static', filename='logo.png') }}" style="height: 60px;">
-            <a href="/logout" style="text-decoration:none; color:#546e7a; font-weight:bold;">Sign Out →</a>
-        </header>
-
-        <div id="map"></div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Company / Plate</th>
-                    <th>Driver</th>
-                    <th>Passenger</th>
-                    <th>Location</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in puvs %}
-                <tr class="{{ 'violator' if p.is_violator else '' }}" id="puv-{{ p.id }}">
-                    <td>
-                        <span style="font-size: 1.1em;">{{ p.type }} {{ p.company }}</span><br>
-                        <span class="badge">{{ p.plate }}</span>
-                    </td>
-                    <td>{{ p.driver }}</td>
-                    <td>{{ p.passenger }}</td>
-                    <td>{{ p.loc_name }}</td>
-                    <td><button class="locate-btn" onclick="focusPUV({{ p.lat }}, {{ p.lng }}, '{{ p.company }}', '{{ p.plate }}')">Locate</button></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="/records" class="locate-btn" style="text-decoration:none; padding: 12px 30px; font-size:14px;">View Violation Records</a>
-        </div>
+{% extends "layout.html" %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px">
+    <div>
+        <h1 style="margin:0; font-weight:800; font-size: 32px; letter-spacing: -1px;">
+            {% if role == 'admin' %} Global Command Center
+            {% elif role == 'enforcer' %} Intercept Priority
+            {% else %} My Fleet Status
+            {% endif %}
+        </h1>
+        <p style="color:#64748b">Real-time Analytics • CDO City</p>
     </div>
+</div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        const map = L.map('map').setView([8.497, 124.635], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+<div id="map" style="height: 450px; border-radius: 24px; border: 5px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px;"></div>
 
-        const puvData = {{ puvs|tojson }};
-        
-        puvData.forEach(p => {
-            const color = p.is_violator ? '#d32f2f' : '#2e7d32';
-            const marker = L.circleMarker([p.lat, p.lng], {
-                radius: 10, fillColor: color, color: "#fff", weight: 2, fillOpacity: 0.9
-            }).addTo(map);
+<div class="card">
+    <h3 style="margin-top:0">Live Unit Monitor</h3>
+    <table style="width:100%; border-collapse:collapse">
+        <thead>
+            <tr style="text-align:left; color:#94a3b8; font-size:12px; text-transform:uppercase">
+                <th style="padding:10px">Operator</th><th>Location</th><th>Status</th><th style="text-align:right">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in puvs %}
+            <tr style="border-top:1px solid #f1f5f9">
+                <td style="padding:15px"><b>{{ p.company }}</b><br><small>{{ p.plate }}</small></td>
+                <td><i class="fa-solid fa-location-dot" style="color:var(--primary); margin-right:8px;"></i>{{ p.loc_name }}</td>
+                <td>
+                    <span style="padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 11px; {{ 'background:#fee2e2; color:#ef4444;' if p.is_violator else 'background:#dcfce7; color:#10b981;' }}">
+                        {{ p.passenger }} {{ '⚠️ OVERLOAD' if p.is_violator else 'OK' }}
+                    </span>
+                </td>
+                <td style="text-align:right">
+                    <button onclick="map.flyTo([{{ p.lat }}, {{ p.lng }}], 17, {animate: true, duration: 1.5})" style="background:#000; color:#fff; border:none; padding:10px 15px; border-radius:10px; font-weight:600; cursor:pointer;">
+                        <i class="fa-solid fa-crosshairs"></i> Track
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-            marker.bindPopup(`
-                <b>${p.company}</b><br>
-                Plate: ${p.plate}<br>
-                Driver: ${p.driver}<br>
-                Status: ${p.is_violator ? '⚠️ OVERLOADED' : '✅ NORMAL'}
-            `);
-        });
-
-        function focusPUV(lat, lng, company, plate) {
-            map.flyTo([lat, lng], 17);
-            L.popup().setLatLng([lat, lng])
-                .setContent(`<b>${company}</b><br>Plate: ${plate}`)
-                .openOn(map);
-        }
-    </script>
-</body>
-</html>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', { zoomControl: false }).setView([8.486, 124.65], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+    const puvData = {{ puvs|tojson if puvs else '[]' }};
+    puvData.forEach(p => {
+        const color = p.is_violator ? '#ef4444' : '#10b981';
+        L.circleMarker([p.lat, p.lng], { radius: 10, fillColor: color, color: "#fff", weight: 3, fillOpacity: 1 }).addTo(map)
+         .bindPopup(`<b>${p.company}</b><br>Load: ${p.passenger}`);
+    });
+</script>
+{% endblock %}

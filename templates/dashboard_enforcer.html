@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1 style="font-weight: 800; color:#ef4444;">Active Violations</h1>
+{% for p in puvs %}
+<div style="background:white; padding:20px; border-radius:15px; margin-bottom:10px; border-left: 5px solid #ef4444;">
+    <b>{{ p.company }}</b> ({{ p.plate }}) <br>
+    <span style="color:#ef4444; font-weight:800;">Load: {{ p.passenger }}</span>
+    <button onclick="map.flyTo([{{p.lat}}, {{p.lng}}], 17)" style="float:right; background:#000; color:#fff; border-radius:10px; padding:5px 15px; cursor:pointer;">Track</button>
+</div>
+{% endfor %}
+<div id="map" style="height: 350px; border-radius: 24px; margin-top:20px;"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map').setView([8.486, 124.65], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+    {{ puvs|tojson }}.forEach(p => {
+        L.circleMarker([p.lat, p.lng], { radius: 12, fillColor: '#ef4444', color: "#fff", weight: 3, fillOpacity: 1 }).addTo(map);
+    });
+</script>
+{% endblock %}

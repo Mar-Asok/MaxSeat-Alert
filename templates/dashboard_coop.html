@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1 style="font-weight: 800;">Fleet Management: {{ session['username'] }}</h1>
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin: 30px 0;">
+    <div class="card">
+        <small style="color:#64748b; font-weight:600">Total Units Managed</small>
+        <div style="font-size:28px; font-weight:800">{{ puvs|length }}</div>
+    </div>
+    <div class="card">
+        <small style="color:#64748b; font-weight:600">Today's Profit Index</small>
+        <div style="font-size:28px; font-weight:800; color:#10b981">+12.4%</div>
+    </div>
+</div>
+<div id="map" style="height: 350px; border-radius: 24px; border: 5px solid white;"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map').setView([8.486, 124.65], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+    const data = {{ puvs|tojson }};
+    data.forEach(p => {
+        L.circleMarker([p.lat, p.lng], { radius: 10, fillColor: '#2563eb', color: "#fff", weight: 3, fillOpacity: 1 }).addTo(map);
+    });
+</script>
+{% endblock %}

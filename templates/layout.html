@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MaxSeat Pro - {{ role|capitalize }}</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --sidebar: #0f172a; --bg: #f8fafc; }
+        body { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 260px; background: var(--sidebar); color: white; display: flex; flex-direction: column; padding: 30px 20px; }
+        .nav-link { display: flex; align-items: center; padding: 14px 18px; color: #94a3b8; text-decoration: none; border-radius: 12px; margin-bottom: 8px; font-weight: 600; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
+        .main-content { flex: 1; overflow-y: auto; padding: 40px; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <img src="{{ url_for('static', filename='logo.png') }}" style="max-width: 150px; margin-bottom: 40px; filter: brightness(0) invert(1);">
+        <nav style="flex:1">
+            <a href="/dashboard" class="nav-link active"><i class="fa-solid fa-house"></i> Dashboard</a>
+            {% if role == 'admin' %}
+                <a href="/intercepts" class="nav-link"><i class="fa-solid fa-users-gear"></i> User Mgmt</a>
+                <a href="/fleet" class="nav-link"><i class="fa-solid fa-file-invoice"></i> Audit Logs</a>
+            {% elif role == 'enforcer' %}
+                <a href="/intercepts" class="nav-link"><i class="fa-solid fa-shield-halved"></i> Intercepts</a>
+                <a href="/fleet" class="nav-link"><i class="fa-solid fa-clipboard-check"></i> Citations</a>
+            {% else %}
+                <a href="/fleet" class="nav-link"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
+                <a href="/intercepts" class="nav-link"><i class="fa-solid fa-chart-line"></i> Revenue</a>
+            {% endif %}
+            <a href="/settings" class="nav-link"><i class="fa-solid fa-gear"></i> Settings</a>
+        </nav>
+        <a href="/logout" class="nav-link" style="color:#fca5a5"><i class="fa-solid fa-power-off"></i> Logout</a>
+    </aside>
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

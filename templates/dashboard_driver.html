@@ -1,0 +1,105 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    /* Force Dark Mode for LCD */
+    body { background: #020617 !important; color: #f8fafc !important; }
+    .lcd-card { background: #0f172a; border-radius: 24px; padding: 30px; border: 1px solid #1e293b; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .sensor-btn { background: #1e293b; color: #f8fafc; border: 2px solid #334155; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; cursor: pointer; transition: 0.2s; display:flex; justify-content:center; align-items:center;}
+    .sensor-btn:hover { background: #2563eb; border-color: #2563eb; }
+    .overload-alert { color: #ef4444 !important; animation: blink 1s infinite; }
+    @keyframes blink { 0% {opacity:1;} 50% {opacity:0.5;} 100% {opacity:1;} }
+</style>
+
+<div style="height: 100%; display: flex; flex-direction: column; gap: 20px;">
+    <div class="lcd-card" style="display:flex; justify-content:space-between; align-items:center; padding: 20px 40px;">
+        <div>
+            <h2 style="margin:0; font-size:32px; color:#38bdf8;">{{ puv.company }}</h2>
+            <p style="margin:5px 0 0 0; font-size:18px; color:#94a3b8;">Plate: <span style="color:#f8fafc; font-weight:bold;">{{ puv.plate }}</span> | Route: <span style="color:#f8fafc;">{{ puv.loc_name }}</span></p>
+        </div>
+        <div style="text-align:right;">
+            <h1 id="lcd-clock" style="margin:0; font-size:42px; font-weight:800; letter-spacing:2px;"></h1>
+            <p style="margin:5px 0 0 0; font-size:16px; color:#94a3b8;">{{ puv.schedule }}</p>
+        </div>
+    </div>
+
+    <div style="display:flex; gap:20px; flex:1; min-height: 400px;">
+        <div class="lcd-card" style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; position:relative;">
+            <h3 style="margin:0; font-size:24px; color:#94a3b8; text-transform:uppercase; letter-spacing:2px;">Current Passengers</h3>
+            
+            <div style="font-size: 140px; font-weight: 800; line-height: 1.1; margin: 20px 0;" id="pass-count" class="{{ 'overload-alert' if puv.passengers > puv.capacity else '' }}">
+                <span id="curr-val">{{ puv.passengers }}</span><span style="font-size:60px; color:#64748b;">/{{ puv.capacity }}</span>
+            </div>
+            
+            <div id="status-msg" style="font-size:24px; font-weight:bold; color: {{ '#ef4444' if puv.passengers > puv.capacity else '#10b981' }};">
+                {% if puv.passengers > puv.capacity %} <i class="fa-solid fa-triangle-exclamation"></i> OVERLOAD WARNING {% else %} SEATS AVAILABLE {% endif %}
+            </div>
+
+            <div style="position:absolute; bottom: 20px; right: 20px; display:flex; gap:10px; background: rgba(0,0,0,0.5); padding:10px; border-radius:40px; border: 1px solid #334155;">
+                <button onclick="updateSensor('sub')" class="sensor-btn"><i class="fa-solid fa-minus"></i></button>
+                <div style="display:flex; align-items:center; padding: 0 10px; color:#64748b; font-size:12px; font-weight:bold; text-transform:uppercase; text-align:center;">Sensor<br>Override</div>
+                <button onclick="updateSensor('add')" class="sensor-btn"><i class="fa-solid fa-plus"></i></button>
+            </div>
+        </div>
+
+        <div style="flex:1; display:flex; flex-direction:column; gap:20px;">
+            <div id="map" style="flex:1; border-radius:24px; border: 4px solid #1e293b;"></div>
+            
+            <div class="lcd-card" style="padding: 20px 30px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:20px;">
+                    <i class="fa-solid fa-id-badge" style="font-size:35px; color:#38bdf8;"></i>
+                    <div>
+                        <p style="margin:0; font-size:14px; color:#94a3b8; text-transform:uppercase;">Authorized Operator</p>
+                        <h2 id="driver-name" style="margin:0; font-size:28px;">{% if puv.show_name %}{{ puv.driver }}{% else %}Protected ID{% endif %}</h2>
+                    </div>
+                </div>
+                <button onclick="toggleName()" style="background:none; border:2px solid #334155; color:#94a3b8; padding:10px 20px; border-radius:12px; font-weight:bold; cursor:pointer; font-size:14px;">Toggle Visibility</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // Live LCD Clock
+    setInterval(() => {
+        document.getElementById('lcd-clock').innerText = new Date().toLocaleTimeString('en-US', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' });
+    }, 1000);
+
+    // Map Init
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([{{ puv.lat }}, {{ puv.lng }}], 16);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+    L.circleMarker([{{ puv.lat }}, {{ puv.lng }}], { radius: 15, fillColor: '#38bdf8', color: '#fff', weight: 4, fillOpacity: 1 }).addTo(map);
+
+    // Sensor Interaction Logic
+    async function updateSensor(action) {
+        const res = await fetch('/api/update_sensor', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: action })
+        });
+        const data = await res.json();
+        if(data.success) {
+            document.getElementById('curr-val').innerText = data.passengers;
+            const container = document.getElementById('pass-count');
+            const msg = document.getElementById('status-msg');
+            
+            if(data.passengers > data.capacity) {
+                container.classList.add('overload-alert');
+                msg.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> OVERLOAD WARNING';
+                msg.style.color = '#ef4444';
+            } else {
+                container.classList.remove('overload-alert');
+                msg.innerHTML = 'SEATS AVAILABLE';
+                msg.style.color = '#10b981';
+            }
+        }
+    }
+
+    // Toggle Name Logic
+    async function toggleName() {
+        const res = await fetch('/api/toggle_name', { method: 'POST' });
+        const data = await res.json();
+        if(data.success) {
+            document.getElementById('driver-name').innerText = data.show_name ? "{{ puv.driver }}" : "Protected ID";
+        }
+    }
+</script>
+{% endblock %}

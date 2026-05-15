@@ -29,7 +29,7 @@
             <div>
                 <h3 style="margin:0 0 8px 0; font-size: 22px;">{{ p.company }} <span style="color:var(--text-muted); font-size:18px;">• {{ p.plate }}</span></h3>
                 <div style="display:flex; gap:15px; align-items:center;">
-                    <span class="badge badge-red" style="font-size: 13px; padding:8px 15px;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:5px;"></i> OVERLOAD: {{ p.passenger }}</span>
+                    <span class="badge badge-red" style="font-size: 13px; padding:8px 15px;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:5px;"></i> OVERLOAD: {{ p.passengers }}/{{ p.capacity }}</span>
                     <span style="font-size:14px; font-weight:600; color:var(--text-muted);"><i class="fa-solid fa-location-crosshairs" style="margin-right:5px;"></i> {{ p.loc_name }}</span>
                     <span style="font-size:14px; font-weight:600; color:var(--text-muted);"><i class="fa-solid fa-gauge-high" style="margin-right:5px;"></i> {{ p.speed }}</span>
                 </div>
@@ -55,7 +55,7 @@
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
     {{ puvs|tojson }}.forEach(p => {
         L.circleMarker([p.lat, p.lng], { radius: 14, fillColor: '#ef4444', color: '#fff', weight: 4, fillOpacity: 1 }).addTo(map)
-         .bindPopup(`<div style="text-align:center;"><b style="font-size:16px;">${p.company}</b><br>Load: <b style="color:red;">${p.passenger}</b></div>`);
+         .bindPopup(`<div style="text-align:center;"><b style="font-size:16px;">${p.company}</b><br>Load: <b style="color:red;">${p.passengers}/${p.capacity}</b></div>`);
     });
 </script>
 <style>@keyframes pulse { 0% {opacity:1;} 50% {opacity:0.4;} 100% {opacity:1;} }</style>

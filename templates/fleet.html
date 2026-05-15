@@ -23,8 +23,8 @@
                 <td><div style="display:flex; align-items:center; gap:10px;"><div style="width:30px; height:30px; border-radius:50%; background:var(--border-color); display:flex; justify-content:center; align-items:center; color:var(--text-muted);"><i class="fa-solid fa-user"></i></div> <b>{{ p.driver }}</b></div></td>
                 <td>
                     <div style="display:flex; flex-direction:column; gap:6px;">
-                        <span class="badge {{ 'badge-red' if (p.passenger.split('/')[0]|int) > (p.passenger.split('/')[1]|int) else 'badge-blue' }}" style="font-size:13px; align-self:flex-start;">{{ p.passenger }}</span>
-                        <div style="width:100px; height:6px; background:var(--border-color); border-radius:3px; overflow:hidden;"><div style="height:100%; width:{{ (p.passenger.split('/')[0]|int / p.passenger.split('/')[1]|int * 100)|int }}%; background:{{ '#ef4444' if (p.passenger.split('/')[0]|int) > (p.passenger.split('/')[1]|int) else '#2563eb' }};"></div></div>
+                        <span class="badge {{ 'badge-red' if p.passengers > p.capacity else 'badge-blue' }}" style="font-size:13px; align-self:flex-start;">{{ p.passengers }}/{{ p.capacity }}</span>
+                        <div style="width:100px; height:6px; background:var(--border-color); border-radius:3px; overflow:hidden;"><div style="height:100%; width:{{ (p.passengers / p.capacity * 100)|int if p.capacity > 0 else 0 }}%; background:{{ '#ef4444' if p.passengers > p.capacity else '#2563eb' }};"></div></div>
                     </div>
                 </td>
                 <td><b>{{ p.loc_name }}</b><br><small style="color:var(--text-muted);">{{ p.speed }} • Update: {{ p.last_update }}</small></td>

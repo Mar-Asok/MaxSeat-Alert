@@ -9,28 +9,29 @@
     <style>
         body { margin: 0; font-family: 'Plus Jakarta Sans'; display: flex; justify-content: center; align-items: center; height: 100vh; overflow:hidden; background: #0f172a;}
         
-        /* Smooth Crossfade Background Engine */
         .theme-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; }
         .theme-layer.active { opacity: 1; }
         #bg-admin { background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%); }
         #bg-enforcer { background: linear-gradient(135deg, #fff1f2 0%, #fecaca 100%); }
-        #bg-coop { background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%); }
+        #bg-driver { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); }
         
-        /* Premium Card with Bounce Transition */
-        .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(25px); padding: 45px; border-radius: 32px; width: 420px; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.6); animation: cardEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes cardEnter { from { opacity: 0; transform: translateY(40px) scale(0.95); filter: blur(8px); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+        .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(25px); padding: 45px; border-radius: 32px; width: 420px; max-height: 90vh; overflow-y: auto; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.6); animation: cardEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .glass-card::-webkit-scrollbar { width: 6px; }
+        .glass-card::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        @keyframes cardEnter { from { opacity: 0; transform: translateY(40px) scale(0.95); filter: blur(8px); } to { opacity: 1; transform: translateY(0); scale(1); filter: blur(0); } }
 
         .alert { background: #fee2e2; color: #ef4444; padding: 15px; border-radius: 16px; margin-bottom: 20px; font-size: 14px; font-weight: 600; display:flex; gap:10px; align-items:center;}
         
-        .input-group { position: relative; margin-bottom: 20px; width: 100%; }
-        select, input { width: 100%; padding: 18px 20px; border: 2px solid #e2e8f0; border-radius: 16px; box-sizing: border-box; font-family: inherit; transition: 0.3s; font-size: 15px; background: #f8fafc; }
+        .input-group { position: relative; margin-bottom: 15px; width: 100%; }
+        select, input { width: 100%; padding: 16px 20px; border: 2px solid #e2e8f0; border-radius: 16px; box-sizing: border-box; font-family: inherit; transition: 0.3s; font-size: 15px; background: #f8fafc; }
         select:focus, input:focus { outline: none; border-color: #2563eb; background: #fff; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
         .peek-btn { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; border: none; background: none; font-size: 18px; padding: 0; }
         
         button[type="submit"] { width: 100%; padding: 18px; background: #0f172a; color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; transition:0.3s;}
         button[type="submit"]:hover { background: #2563eb; transform: translateY(-3px); box-shadow: 0 15px 25px rgba(37,99,235,0.25); }
 
-        /* Loading Overlay */
+        .driver-fields { display: none; background: rgba(0,0,0,0.03); padding: 20px; border-radius: 16px; border: 1px dashed #cbd5e1; margin-bottom: 15px; }
+
         #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); backdrop-filter: blur(10px); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.4s ease; }
         #loader-overlay.active { opacity: 1; visibility: visible; }
         .spinner { width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #2563eb; border-radius: 50%; animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; }
@@ -40,7 +41,7 @@
 <body>
     <div id="bg-admin" class="theme-layer active"></div>
     <div id="bg-enforcer" class="theme-layer"></div>
-    <div id="bg-coop" class="theme-layer"></div>
+    <div id="bg-driver" class="theme-layer"></div>
 
     <div id="loader-overlay"><div class="spinner"></div><p style="color:white; margin-top:20px; font-weight:800; font-size:18px;">Provisioning Account...</p></div>
 
@@ -51,7 +52,7 @@
             <div class="alert"><i class="fa-solid fa-triangle-exclamation"></i> {{ m }}</div>
         {% endfor %}{% endif %}{% endwith %}
 
-        <h2 id="reg-title" style="margin: 0 0 5px 0; font-weight: 800; font-size: 26px; color: #0f172a; transition:0.3s;">Register Admin</h2>
+        <h2 id="reg-title" style="margin: 0 0 5px 0; font-weight: 800; font-size: 26px; color: #0f172a; transition:0.3s;">Register Identity</h2>
         <p style="color: #64748b; font-size: 14px; margin-bottom: 30px;">Enter details to be added to the network.</p>
 
         <form method="POST" onsubmit="return validatePasswords()">
@@ -59,11 +60,20 @@
                 <select name="role" id="reg-role-select" onchange="updateRegUI()">
                     <option value="admin">System Administrator</option>
                     <option value="enforcer">Law Enforcement</option>
-                    <option value="cooperative">Transport Cooperative</option>
+                    <option value="driver">PUV Driver Operations</option>
                 </select>
             </div>
+
+            <div class="driver-fields" id="driver-fields">
+                <h4 style="margin:0 0 15px 0; color:#0f172a;"><i class="fa-solid fa-bus" style="color:#2563eb; margin-right:5px;"></i> Unit Information</h4>
+                <div class="input-group"><input type="text" id="df-company" name="company" placeholder="Transport Company / Coop"></div>
+                <div class="input-group"><input type="text" id="df-plate" name="plate" placeholder="License Plate (e.g. ABC-1234)"></div>
+                <div class="input-group"><input type="text" id="df-schedule" name="schedule" placeholder="Schedule (e.g. 06:00 AM - 08:00 PM)"></div>
+                <div class="input-group"><input type="number" id="df-cap" name="capacity" placeholder="Max Passenger Capacity (e.g. 22)"></div>
+            </div>
+
             <div class="input-group">
-                <input type="text" name="username" placeholder="Username / Agency ID" required>
+                <input type="text" name="username" placeholder="Full Name / Username" required>
             </div>
             <div class="input-group">
                 <input type="password" id="reg-pwd" name="password" placeholder="Secure Password" required>
@@ -91,15 +101,27 @@
             const role = document.getElementById('reg-role-select').value;
             localStorage.setItem('persistentRole', role);
             
-            // Background Crossfade Animation
             document.getElementById('bg-admin').classList.toggle('active', role === 'admin');
             document.getElementById('bg-enforcer').classList.toggle('active', role === 'enforcer');
-            document.getElementById('bg-coop').classList.toggle('active', role === 'cooperative');
+            document.getElementById('bg-driver').classList.toggle('active', role === 'driver');
             
-            // Text Update
-            document.getElementById('reg-title').innerText = 'Register ' + (role === 'admin' ? 'Admin' : (role === 'enforcer' ? 'Enforcer' : 'Cooperative'));
+            document.getElementById('reg-title').innerText = 'Register ' + (role === 'admin' ? 'Admin' : (role === 'enforcer' ? 'Enforcer' : 'Driver'));
             
-            // Card Bounce Animation
+            const driverFields = document.getElementById('driver-fields');
+            if (role === 'driver') {
+                driverFields.style.display = 'block';
+                document.getElementById('df-company').required = true;
+                document.getElementById('df-plate').required = true;
+                document.getElementById('df-schedule').required = true;
+                document.getElementById('df-cap').required = true;
+            } else {
+                driverFields.style.display = 'none';
+                document.getElementById('df-company').required = false;
+                document.getElementById('df-plate').required = false;
+                document.getElementById('df-schedule').required = false;
+                document.getElementById('df-cap').required = false;
+            }
+
             const card = document.getElementById('main-card');
             card.style.transform = 'scale(0.96)';
             setTimeout(() => { card.style.transform = 'scale(1)'; }, 150);
@@ -114,7 +136,8 @@
         
         window.onload = () => {
             const saved = localStorage.getItem('persistentRole') || 'admin';
-            document.getElementById('reg-role-select').value = saved; 
+            if(saved === 'cooperative') { document.getElementById('reg-role-select').value = 'admin'; } 
+            else { document.getElementById('reg-role-select').value = saved; }
             updateRegUI();
         };
     </script>

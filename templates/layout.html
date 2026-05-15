@@ -31,10 +31,7 @@
         .top-nav { height: 70px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; background: var(--card-bg); z-index: 5; flex-shrink: 0; }
         
         .main-content { flex: 1; overflow-y: auto; padding: 40px; position: relative; animation: windowFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes windowFadeIn {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes windowFadeIn { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
 
         #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); backdrop-filter: blur(10px); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.3s ease; }
         #loader-overlay.active { opacity: 1; visibility: visible; }
@@ -46,7 +43,6 @@
         .badge { padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
         .badge-red { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
         .badge-green { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
-        .badge-blue { background: rgba(37,99,235,0.1); color: #2563eb; border: 1px solid rgba(37,99,235,0.2); }
         
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--border-color); }
@@ -56,7 +52,6 @@
         .btn-action { background: #0f172a; color: #fff; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; font-family: inherit; }
         .btn-action:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(37,99,235,0.3); }
 
-        /* Custom Toggle Switch for Settings */
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 34px; }
@@ -66,17 +61,14 @@
     </style>
 </head>
 <body>
-    <div id="loader-overlay">
-        <div class="spinner"></div>
-        <p id="loader-text" style="color:white; margin-top:20px; font-weight:800; font-size:18px; letter-spacing:1px;">Processing Request...</p>
-    </div>
+    <div id="loader-overlay"><div class="spinner"></div><p id="loader-text" style="color:white; margin-top:20px; font-weight:800; font-size:18px;">Processing...</p></div>
 
+    {% if role != 'driver' %}
     <aside class="sidebar">
         <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
         <nav style="flex:1">
-            <p style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; padding-left: 10px;">Command Menu</p>
+            <p style="font-size: 11px; color: #64748b; text-transform: uppercase; margin-bottom: 10px; padding-left: 10px;">Command Menu</p>
             <a href="/dashboard" onclick="showLoader('Loading Dashboard...')" class="nav-link {{ 'active' if request.path == '/dashboard' }}"><i class="fa-solid fa-house"></i> Dashboard</a>
-            
             {% if role == 'admin' %}
                 <a href="/user_management" onclick="showLoader('Loading Directory...')" class="nav-link {{ 'active' if request.path == '/user_management' }}"><i class="fa-solid fa-users-gear"></i> User Mgmt</a>
                 <a href="/audit_logs" onclick="showLoader('Loading Logs...')" class="nav-link {{ 'active' if request.path == '/audit_logs' }}"><i class="fa-solid fa-file-invoice"></i> Audit Logs</a>
@@ -84,7 +76,6 @@
                 <a href="/intercepts" onclick="showLoader('Loading Targets...')" class="nav-link {{ 'active' if request.path == '/intercepts' }}"><i class="fa-solid fa-shield-halved"></i> Intercepts</a>
                 <a href="/citations" onclick="showLoader('Loading Citations...')" class="nav-link {{ 'active' if request.path == '/citations' }}"><i class="fa-solid fa-clipboard-check"></i> Citations</a>
             {% endif %}
-
             <a href="/fleet" onclick="showLoader('Loading Registry...')" class="nav-link {{ 'active' if request.path == '/fleet' }}"><i class="fa-solid fa-bus"></i> Fleet Registry</a>
             <a href="/settings" onclick="showLoader('Loading Preferences...')" class="nav-link {{ 'active' if request.path == '/settings' }}"><i class="fa-solid fa-gear"></i> Settings</a>
         </nav>
@@ -94,39 +85,35 @@
         </div>
         <a href="#" onclick="triggerLogout()" class="nav-link" style="color:#fca5a5; background: rgba(239,68,68,0.1);"><i class="fa-solid fa-power-off"></i> Secure Logout</a>
     </aside>
+    {% endif %}
 
     <div class="main-wrapper">
+        {% if role != 'driver' %}
         <div class="top-nav">
             <div style="font-size: 14px; color: var(--text-muted); font-weight: 600; display:flex; align-items:center;">
                 <i class="fa-solid fa-satellite-dish" style="margin-right: 8px; color: #10b981;"></i> GNSS Tracking Online <span style="margin: 0 15px;">|</span>
                 <i class="fa-regular fa-clock" style="margin-right: 5px;"></i> <span id="live-clock"></span>
             </div>
         </div>
-        <main class="main-content">
+        {% endif %}
+        
+        <main class="main-content" style="{% if role == 'driver' %}padding:0;{% endif %}">
             {% block content %}{% endblock %}
         </main>
     </div>
 
     <script>
         if(localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); }
+        function showLoader(text) { document.getElementById('loader-text').innerText = text; document.getElementById('loader-overlay').classList.add('active'); }
+        function triggerLogout() { showLoader("Terminating Secure Session..."); setTimeout(() => { window.location.href = "/logout"; }, 800); }
+        function popAlert(title, text, icon) { Swal.fire({ title: title, text: text, icon: icon, confirmButtonColor: '#0f172a', background: 'var(--card-bg)', color: 'var(--text-main)' }); }
         
-        function showLoader(text) {
-            document.getElementById('loader-text').innerText = text;
-            document.getElementById('loader-overlay').classList.add('active');
-        }
-
-        function triggerLogout() {
-            showLoader("Terminating Secure Session...");
-            setTimeout(() => { window.location.href = "/logout"; }, 800);
-        }
-
-        function popAlert(title, text, icon) {
-            Swal.fire({ title: title, text: text, icon: icon, confirmButtonColor: '#0f172a', background: 'var(--card-bg)', color: 'var(--text-main)' });
-        }
-
         setInterval(() => {
-            const now = new Date();
-            document.getElementById('live-clock').innerText = now.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
+            const clockEl = document.getElementById('live-clock');
+            if(clockEl) {
+                const now = new Date();
+                clockEl.innerText = now.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
+            }
         }, 1000);
     </script>
 </body>

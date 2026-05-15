@@ -85,7 +85,6 @@
         }
     }
     
-    // Check if flash message from form submission exists
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}

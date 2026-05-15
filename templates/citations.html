@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block content %}
+<div style="margin-bottom:30px;">
+    <h1 style="font-weight: 800; margin:0; font-size:34px;">Digital Citation Database</h1>
+    <p style="color:var(--text-muted); margin-top:5px;">Central repository of issued tickets and administrative sanctions.</p>
+</div>
+<div class="card" style="padding:0; overflow:hidden;">
+    <table>
+        <thead style="background:var(--hover-bg);"><tr><th>Citation Serial</th><th>Violator Plate</th><th>Enforcing Officer</th><th>Fine Amount</th><th>Resolution Status</th></tr></thead>
+        <tbody>
+            <tr><td><b style="font-family:monospace; font-size:15px;">#CT-9921-A</b></td><td><b>KVR-102</b> <small style="color:var(--text-muted);">(Señor Pedro Lines)</small></td><td>PNP-Police</td><td>₱5,000.00</td><td><span class="badge badge-red">PENDING PAYMENT</span></td></tr>
+            <tr><td><b style="font-family:monospace; font-size:15px;">#CT-8810-B</b></td><td><b>BBA-112</b> <small style="color:var(--text-muted);">(Señor Pedro Lines)</small></td><td>PNP-Police</td><td>₱2,500.00</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+            <tr><td><b style="font-family:monospace; font-size:15px;">#CT-7744-C</b></td><td><b>XYZ-998</b> <small style="color:var(--text-muted);">(Bukidnon Express)</small></td><td>PNP-Police</td><td>₱5,000.00</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

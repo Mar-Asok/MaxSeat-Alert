@@ -1,20 +1,62 @@
 {% extends "layout.html" %}
 {% block content %}
-<h1 style="font-weight: 800; color:#ef4444;">Active Violations</h1>
-{% for p in puvs %}
-<div style="background:white; padding:20px; border-radius:15px; margin-bottom:10px; border-left: 5px solid #ef4444;">
-    <b>{{ p.company }}</b> ({{ p.plate }}) <br>
-    <span style="color:#ef4444; font-weight:800;">Load: {{ p.passenger }}</span>
-    <button onclick="map.flyTo([{{p.lat}}, {{p.lng}}], 17)" style="float:right; background:#000; color:#fff; border-radius:10px; padding:5px 15px; cursor:pointer;">Track</button>
+<div style="margin-bottom: 35px; display:flex; justify-content:space-between; align-items:flex-end;">
+    <div>
+        <h1 style="font-weight: 800; font-size: 34px; margin: 0; color: #ef4444; letter-spacing:-1px;">Priority Intercept Targets</h1>
+        <p style="color: var(--text-muted); margin-top: 8px; font-size:15px;">Units actively violating maximum load capacity via GNSS sensor data.</p>
+    </div>
+    <div style="display:flex; gap:15px;">
+        <div class="card" style="margin:0; padding:12px 25px; display:flex; align-items:center; gap:15px; border:2px solid #ef4444; background: rgba(239,68,68,0.05);">
+            <i class="fa-solid fa-tower-broadcast" style="color:#ef4444; font-size:20px; animation: pulse 1.5s infinite;"></i>
+            <span style="font-weight:800; font-size:18px; color:#ef4444;">{{ stats.active_violations }} TARGETS DETECTED</span>
+        </div>
+    </div>
 </div>
-{% endfor %}
-<div id="map" style="height: 350px; border-radius: 24px; margin-top:20px;"></div>
+
+<div class="card" style="margin-bottom:35px; padding:10px; display:flex; flex-direction:column;">
+    <div style="padding:15px 20px; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; font-size:18px;">GNSS Tactical Map</h3>
+    </div>
+    <div id="map" style="height: 350px; border-radius: 16px; border: 2px solid var(--border-color); z-index: 1;"></div>
+</div>
+
+<h3 style="font-size:20px; margin-bottom:20px;"><i class="fa-solid fa-list-check" style="margin-right:10px;"></i> Deployment Queue</h3>
+<div style="display: grid; gap: 20px;">
+    {% for p in puvs %}
+    <div class="card" style="margin:0; display:flex; justify-content:space-between; align-items:center; border-left: 8px solid #ef4444; padding: 25px 35px;">
+        <div style="display:flex; gap:25px; align-items:center;">
+            <div style="background:rgba(239,68,68,0.1); padding:20px; border-radius:16px;"><i class="fa-solid fa-bus" style="font-size:30px; color:#ef4444;"></i></div>
+            <div>
+                <h3 style="margin:0 0 8px 0; font-size: 22px;">{{ p.company }} <span style="color:var(--text-muted); font-size:18px;">• {{ p.plate }}</span></h3>
+                <div style="display:flex; gap:15px; align-items:center;">
+                    <span class="badge badge-red" style="font-size: 13px; padding:8px 15px;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:5px;"></i> OVERLOAD: {{ p.passenger }}</span>
+                    <span style="font-size:14px; font-weight:600; color:var(--text-muted);"><i class="fa-solid fa-location-crosshairs" style="margin-right:5px;"></i> {{ p.loc_name }}</span>
+                    <span style="font-size:14px; font-weight:600; color:var(--text-muted);"><i class="fa-solid fa-gauge-high" style="margin-right:5px;"></i> {{ p.speed }}</span>
+                </div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="map.flyTo([{{p.lat}}, {{p.lng}}], 17, {animate:true, duration:1.5})" class="btn-action" style="background:var(--hover-bg); color:var(--text-main); border:2px solid var(--border-color); box-shadow:none;"><i class="fa-solid fa-crosshairs"></i> LOCATE</button>
+            <button onclick="popAlert('Unit Dispatched', 'Enforcement team deployed to {{p.loc_name}}.', 'success')" class="btn-action" style="background:#ef4444;"><i class="fa-solid fa-bolt" style="margin-right:8px;"></i> DISPATCH</button>
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="text-align:center; padding: 60px; color: var(--text-muted); border:2px dashed var(--border-color);">
+        <i class="fa-solid fa-shield-check" style="font-size: 50px; color: #10b981; margin-bottom:20px;"></i>
+        <h3 style="font-size:24px; color:var(--text-main);">Sector Secure</h3>
+        <p style="font-size:16px;">No active overload violations detected via sensors.</p>
+    </div>
+    {% endfor %}
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const map = L.map('map').setView([8.486, 124.65], 13);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
     {{ puvs|tojson }}.forEach(p => {
-        L.circleMarker([p.lat, p.lng], { radius: 12, fillColor: '#ef4444', color: "#fff", weight: 3, fillOpacity: 1 }).addTo(map);
+        L.circleMarker([p.lat, p.lng], { radius: 14, fillColor: '#ef4444', color: '#fff', weight: 4, fillOpacity: 1 }).addTo(map)
+         .bindPopup(`<div style="text-align:center;"><b style="font-size:16px;">${p.company}</b><br>Load: <b style="color:red;">${p.passenger}</b></div>`);
     });
 </script>
+<style>@keyframes pulse { 0% {opacity:1;} 50% {opacity:0.4;} 100% {opacity:1;} }</style>
 {% endblock %}

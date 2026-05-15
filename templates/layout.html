@@ -3,39 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <title>MaxSeat Pro - {{ role|capitalize }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --sidebar: #0f172a; --bg: #f8fafc; }
-        body { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 260px; background: var(--sidebar); color: white; display: flex; flex-direction: column; padding: 30px 20px; }
-        .nav-link { display: flex; align-items: center; padding: 14px 18px; color: #94a3b8; text-decoration: none; border-radius: 12px; margin-bottom: 8px; font-weight: 600; }
-        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; }
-        .main-content { flex: 1; overflow-y: auto; padding: 40px; }
+        :root { 
+            --primary: #2563eb; --sidebar: #0f172a; --bg: #f8fafc; 
+            --text-main: #0f172a; --text-muted: #64748b; --card-bg: #ffffff;
+            --border-color: #e2e8f0; --hover-bg: #f1f5f9;
+        }
+        body.dark-mode {
+            --bg: #020617; --card-bg: #0f172a; --text-main: #f8fafc; 
+            --text-muted: #94a3b8; --border-color: #1e293b; --sidebar: #020617; --hover-bg: #1e293b;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: background 0.3s ease; }
+        
+        .sidebar { width: 270px; background: var(--sidebar); color: white; display: flex; flex-direction: column; padding: 30px 20px; border-right: 1px solid rgba(255,255,255,0.05); z-index: 10; flex-shrink: 0; }
+        .logo { max-width: 150px; margin-bottom: 40px; filter: brightness(0) invert(1); transition: 0.3s; }
+        .nav-link { display: flex; align-items: center; padding: 15px 20px; color: #94a3b8; text-decoration: none; border-radius: 14px; margin-bottom: 8px; font-weight: 600; transition: all 0.2s ease-out; }
+        .nav-link:hover, .nav-link.active { background: var(--primary); color: white; transform: translateX(5px); }
+        .nav-link i { width: 28px; font-size: 18px; }
+
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+        .top-nav { height: 70px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; background: var(--card-bg); z-index: 5; flex-shrink: 0; }
+        
+        .main-content { flex: 1; overflow-y: auto; padding: 40px; position: relative; animation: windowFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes windowFadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); backdrop-filter: blur(10px); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: 0.3s ease; }
+        #loader-overlay.active { opacity: 1; visibility: visible; }
+        .spinner { width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #2563eb; border-radius: 50%; animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .card { background: var(--card-bg); border-radius: 24px; padding: 25px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid var(--border-color); transition: all 0.3s ease; }
+        .card:hover { box-shadow: 0 15px 35px -5px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .badge { padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-red { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+        .badge-green { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+        .badge-blue { background: rgba(37,99,235,0.1); color: #2563eb; border: 1px solid rgba(37,99,235,0.2); }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--border-color); }
+        td { padding: 18px 15px; border-bottom: 1px solid var(--border-color); color: var(--text-main); transition: 0.2s; }
+        tbody tr:hover td { background: var(--hover-bg); }
+        
+        .btn-action { background: #0f172a; color: #fff; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; font-family: inherit; }
+        .btn-action:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(37,99,235,0.3); }
+
+        /* Custom Toggle Switch for Settings */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
 <body>
+    <div id="loader-overlay">
+        <div class="spinner"></div>
+        <p id="loader-text" style="color:white; margin-top:20px; font-weight:800; font-size:18px; letter-spacing:1px;">Processing Request...</p>
+    </div>
+
     <aside class="sidebar">
-        <img src="{{ url_for('static', filename='logo.png') }}" style="max-width: 150px; margin-bottom: 40px; filter: brightness(0) invert(1);">
+        <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
         <nav style="flex:1">
-            <a href="/dashboard" class="nav-link active"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <p style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; padding-left: 10px;">Command Menu</p>
+            <a href="/dashboard" onclick="showLoader('Loading Dashboard...')" class="nav-link {{ 'active' if request.path == '/dashboard' }}"><i class="fa-solid fa-house"></i> Dashboard</a>
+            
             {% if role == 'admin' %}
-                <a href="/intercepts" class="nav-link"><i class="fa-solid fa-users-gear"></i> User Mgmt</a>
-                <a href="/fleet" class="nav-link"><i class="fa-solid fa-file-invoice"></i> Audit Logs</a>
+                <a href="/user_management" onclick="showLoader('Loading Directory...')" class="nav-link {{ 'active' if request.path == '/user_management' }}"><i class="fa-solid fa-users-gear"></i> User Mgmt</a>
+                <a href="/audit_logs" onclick="showLoader('Loading Logs...')" class="nav-link {{ 'active' if request.path == '/audit_logs' }}"><i class="fa-solid fa-file-invoice"></i> Audit Logs</a>
             {% elif role == 'enforcer' %}
-                <a href="/intercepts" class="nav-link"><i class="fa-solid fa-shield-halved"></i> Intercepts</a>
-                <a href="/fleet" class="nav-link"><i class="fa-solid fa-clipboard-check"></i> Citations</a>
-            {% else %}
-                <a href="/fleet" class="nav-link"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
-                <a href="/intercepts" class="nav-link"><i class="fa-solid fa-chart-line"></i> Revenue</a>
+                <a href="/intercepts" onclick="showLoader('Loading Targets...')" class="nav-link {{ 'active' if request.path == '/intercepts' }}"><i class="fa-solid fa-shield-halved"></i> Intercepts</a>
+                <a href="/citations" onclick="showLoader('Loading Citations...')" class="nav-link {{ 'active' if request.path == '/citations' }}"><i class="fa-solid fa-clipboard-check"></i> Citations</a>
             {% endif %}
-            <a href="/settings" class="nav-link"><i class="fa-solid fa-gear"></i> Settings</a>
+
+            <a href="/fleet" onclick="showLoader('Loading Registry...')" class="nav-link {{ 'active' if request.path == '/fleet' }}"><i class="fa-solid fa-bus"></i> Fleet Registry</a>
+            <a href="/settings" onclick="showLoader('Loading Preferences...')" class="nav-link {{ 'active' if request.path == '/settings' }}"><i class="fa-solid fa-gear"></i> Settings</a>
         </nav>
-        <a href="/logout" class="nav-link" style="color:#fca5a5"><i class="fa-solid fa-power-off"></i> Logout</a>
+        <div style="padding: 20px; background: rgba(255,255,255,0.05); border-radius: 16px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1);">
+            <p style="margin:0; font-size: 14px; font-weight: 800;">{{ session['username'] }}</p>
+            <p style="margin:0; font-size: 12px; color: #94a3b8; text-transform: capitalize; margin-top:2px;">{{ role }} Authority</p>
+        </div>
+        <a href="#" onclick="triggerLogout()" class="nav-link" style="color:#fca5a5; background: rgba(239,68,68,0.1);"><i class="fa-solid fa-power-off"></i> Secure Logout</a>
     </aside>
-    <main class="main-content">
-        {% block content %}{% endblock %}
-    </main>
+
+    <div class="main-wrapper">
+        <div class="top-nav">
+            <div style="font-size: 14px; color: var(--text-muted); font-weight: 600; display:flex; align-items:center;">
+                <i class="fa-solid fa-satellite-dish" style="margin-right: 8px; color: #10b981;"></i> GNSS Tracking Online <span style="margin: 0 15px;">|</span>
+                <i class="fa-regular fa-clock" style="margin-right: 5px;"></i> <span id="live-clock"></span>
+            </div>
+        </div>
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        if(localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); }
+        
+        function showLoader(text) {
+            document.getElementById('loader-text').innerText = text;
+            document.getElementById('loader-overlay').classList.add('active');
+        }
+
+        function triggerLogout() {
+            showLoader("Terminating Secure Session...");
+            setTimeout(() => { window.location.href = "/logout"; }, 800);
+        }
+
+        function popAlert(title, text, icon) {
+            Swal.fire({ title: title, text: text, icon: icon, confirmButtonColor: '#0f172a', background: 'var(--card-bg)', color: 'var(--text-main)' });
+        }
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = now.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
+        }, 1000);
+    </script>
 </body>
 </html>

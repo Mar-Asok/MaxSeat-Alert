@@ -1,7 +1,97 @@
 {% extends "layout.html" %}
 {% block content %}
-<h1 style="font-weight: 800;">System Settings</h1>
-<div class="card">
-    <p>Manage security protocols and account preferences for {{ session['username'] }}.</p>
+<div style="margin-bottom:30px;">
+    <h1 style="font-weight: 800; margin:0; font-size:34px;">System Configuration</h1>
+    <p style="color:var(--text-muted); margin-top:5px;">Manage local preferences, profile details, and security credentials.</p>
 </div>
+
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
+    <div>
+        <div class="card" style="padding:35px;">
+            <h3 style="margin-top:0; border-bottom:2px solid var(--border-color); padding-bottom:15px; font-size:20px;">Profile Information</h3>
+            <form action="/update_settings" method="POST">
+                <label style="font-size:12px; font-weight:bold; color:var(--text-muted);">Authorized Username</label>
+                <input type="text" value="{{ session['username'] }}" disabled style="width:100%; padding:15px; margin:5px 0 15px; border-radius:12px; border:2px solid var(--border-color); background:var(--bg); color:var(--text-main); font-family:inherit; opacity:0.7;">
+                
+                <label style="font-size:12px; font-weight:bold; color:var(--text-muted);">Contact Email</label>
+                <input type="email" value="{{ user_data.email }}" placeholder="update@email.com" required style="width:100%; padding:15px; margin:5px 0 20px; border-radius:12px; border:2px solid var(--border-color); background:var(--bg); color:var(--text-main); font-family:inherit;">
+                
+                <button type="submit" class="btn-action" style="width:100%;">Save Changes</button>
+            </form>
+        </div>
+
+        <div class="card" style="padding:35px;">
+            <h3 style="margin-top:0; border-bottom:2px solid var(--border-color); padding-bottom:15px; font-size:20px;">Interface Appearance</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 20px;">
+                <div>
+                    <b style="font-size: 16px;">Dark Mode Engine</b>
+                    <p style="margin:5px 0 0 0; color:var(--text-muted); font-size:13px; line-height:1.5;">Toggle the premium low-light interface locally.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle" onchange="toggleTheme()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="card" style="padding:35px;">
+            <h3 style="margin-top:0; border-bottom:2px solid var(--border-color); padding-bottom:15px; font-size:20px;">Notification Preferences</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; border-bottom:1px solid var(--border-color);">
+                <span style="font-weight:600;"><i class="fa-solid fa-envelope" style="color:var(--text-muted); margin-right:10px;"></i> Email Alerts</span>
+                <label class="switch"><input type="checkbox" checked onchange="popAlert('Saved', 'Email preferences updated.', 'success')"><span class="slider"></span></label>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; border-bottom:1px solid var(--border-color);">
+                <span style="font-weight:600;"><i class="fa-solid fa-mobile-screen" style="color:var(--text-muted); margin-right:10px;"></i> SMS Push Notifications</span>
+                <label class="switch"><input type="checkbox" onchange="popAlert('Saved', 'SMS preferences updated.', 'success')"><span class="slider"></span></label>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 0;">
+                <span style="font-weight:600;"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-right:10px;"></i> Critical Overload Pings</span>
+                <label class="switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <div class="card" style="padding:35px;">
+            <h3 style="margin-top:0; border-bottom:2px solid var(--border-color); padding-bottom:15px; font-size:20px;">Account Security</h3>
+            <div style="background:var(--hover-bg); padding:20px; border-radius:16px; margin-bottom:25px; display:flex; align-items:center; gap:20px;">
+                <div style="width:60px; height:60px; background:var(--primary); color:white; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:24px; font-weight:800;">{{ session['username'][0]|upper }}</div>
+                <div>
+                    <h3 style="margin:0 0 5px 0; font-size:20px;">{{ session['username'] }}</h3>
+                    <span class="badge badge-blue">{{ session['role'] }} Clearance</span>
+                </div>
+            </div>
+            
+            <div style="display:flex; gap:15px;">
+                <button onclick="popAlert('Check Email', 'Password reset instructions sent.', 'info')" class="btn-action" style="flex:1; background:var(--card-bg); color:var(--text-main); border:2px solid var(--border-color); box-shadow:none;"><i class="fa-solid fa-key" style="margin-right:8px;"></i> Reset Password</button>
+                <button onclick="triggerLogout()" class="btn-action" style="flex:1; background:#ef4444; box-shadow: 0 4px 15px rgba(239,68,68,0.2);"><i class="fa-solid fa-power-off" style="margin-right:8px;"></i> Terminate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const themeToggle = document.getElementById('theme-toggle');
+    if(localStorage.getItem('theme') === 'dark') { themeToggle.checked = true; }
+    
+    function toggleTheme() {
+        const body = document.body;
+        if(themeToggle.checked) {
+            body.classList.add('dark-mode');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            body.classList.remove('dark-mode');
+            localStorage.setItem('theme', 'light');
+        }
+    }
+    
+    // Check if flash message from form submission exists
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                popAlert('Success!', '{{ message }}', 'success');
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</script>
 {% endblock %}

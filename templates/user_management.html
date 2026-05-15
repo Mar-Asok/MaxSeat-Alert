@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;">
+    <div>
+        <h1 style="font-weight: 800; margin:0; font-size:34px;">User Access Provisioning</h1>
+        <p style="color:var(--text-muted); margin-top:5px;">Manage identities and clearance levels across the enterprise.</p>
+    </div>
+    <button onclick="popAlert('Coming Soon', 'User creation module booting up.', 'info')" class="btn-action"><i class="fa-solid fa-user-plus" style="margin-right:8px;"></i> Create Identity</button>
+</div>
+<div class="card" style="padding:0; overflow:hidden;">
+    <table>
+        <thead style="background:var(--hover-bg);"><tr><th>System Identifier</th><th>Contact Email</th><th>Clearance Level</th><th>Security Status</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for username, data in users_db.items() %}
+            <tr>
+                <td style="font-size:16px;"><b>{{ username }}</b></td>
+                <td><span style="color:var(--text-muted);"><i class="fa-solid fa-envelope" style="margin-right:5px;"></i> {{ data.email }}</span></td>
+                <td><span class="badge" style="background:var(--hover-bg); color:var(--text-main); font-size:12px;"><i class="fa-solid fa-shield" style="margin-right:5px;"></i> {{ data.role }}</span></td>
+                <td><span style="color:#10b981; font-weight:800; font-size:13px;"><i class="fa-solid fa-circle-check"></i> AUTHENTICATED</span></td>
+                <td><button onclick="popAlert('Edit User', 'Editing permissions for {{username}}', 'question')" style="background:none; border:none; color:#2563eb; cursor:pointer; font-weight:800; font-size:14px; font-family:inherit;"><i class="fa-solid fa-pen-to-square"></i> Modify</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,7 +1,24 @@
 {% extends "layout.html" %}
 {% block content %}
-<h1 style="font-weight: 800;">Intercepts & Records</h1>
-<div class="card">
-    <p>Historical violation data and active intercept protocols for {{ role|capitalize }}.</p>
+<div style="margin-bottom:30px;">
+    <h1 style="font-weight: 800; margin:0; font-size:34px;">Intercept & Apprehension Logs</h1>
+    <p style="color:var(--text-muted); margin-top:5px;">Historical record of triggered network violations.</p>
+</div>
+<div class="card" style="padding:0; overflow:hidden;">
+    <table>
+        <thead style="background:var(--hover-bg);"><tr><th>Target Entity</th><th>Infraction Type</th><th>GNSS Coordinate</th><th>Protocol Command</th></tr></thead>
+        <tbody>
+            {% for p in puvs %}
+            <tr>
+                <td><b style="font-size:15px;">{{ p.company }}</b><br><small style="color:var(--text-muted); font-weight:600;">{{ p.plate }}</small></td>
+                <td><span class="badge badge-red" style="font-size:12px; padding:8px 12px;"><i class="fa-solid fa-scale-unbalanced"></i> CAPACITY EXCEEDED ({{p.passenger}})</span></td>
+                <td><b>{{ p.loc_name }}</b><br><small style="color:var(--text-muted);"><i class="fa-solid fa-clock"></i> Logged: {{ p.last_update }}</small></td>
+                <td><button onclick="popAlert('Protocol Initiated', 'Dispatching response unit to {{p.loc_name}}', 'success')" class="btn-action" style="background:#ef4444; box-shadow:0 4px 10px rgba(239,68,68,0.2);">DISPATCH UNIT</button></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" style="text-align:center; padding:50px; color:var(--text-muted); font-size:16px;"><i class="fa-solid fa-folder-open" style="font-size:30px; margin-bottom:10px; display:block; color:var(--border-color);"></i> Database holds zero active violations.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}
